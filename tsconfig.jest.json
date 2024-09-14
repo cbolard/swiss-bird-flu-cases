@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "es2016",
+    "moduleResolution": "node",
+    "types": ["jest"],
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": false
+  },
+  "include": ["jest.setup.ts", "src/types", "**/*.test.ts", "**/*.test.tsx"]
+}
