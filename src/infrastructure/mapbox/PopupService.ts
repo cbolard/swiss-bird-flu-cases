@@ -15,7 +15,7 @@ export class PopupService {
       this.popup
         .setLngLat(coordinates)
         .setHTML(content)
-        .addTo(map); // Passer l'instance de la carte ici, et non l'accessToken
+        .addTo(map); 
     }
   }
 

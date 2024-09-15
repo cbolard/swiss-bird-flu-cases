@@ -34,17 +34,21 @@ export class BorderService {
   addBordersLayer(
     map: mapboxgl.Map,
     sourceId: string,
-    metricPerCanton: Record<string, number>
+    metricPerCanton: Record<string, { H5N1: number; H5N2: number; H7N2: number; H7N8: number }>
   ): void {
     const paintValues = Object.keys(metricPerCanton).flatMap((canton) => {
       const normalizedCanton = this.normalizeCantonName(canton);
+      const totalCases =
+        metricPerCanton[canton].H5N1 +
+        metricPerCanton[canton].H5N2 +
+        metricPerCanton[canton].H7N2 +
+        metricPerCanton[canton].H7N8;
+  
       return normalizedCanton
-        ? [normalizedCanton, this.getColorForMetric(metricPerCanton[canton])]
+        ? [normalizedCanton, this.getColorForMetric(totalCases)]
         : [];
     });
-
-    
-
+  
     if (!map.getLayer("canton-borders-fill")) {
       map.addLayer({
         id: "canton-borders-fill",
@@ -59,7 +63,7 @@ export class BorderService {
           ],
         },
       });
-
+  
       map.addLayer({
         id: "canton-borders-line",
         type: "line",
@@ -72,6 +76,7 @@ export class BorderService {
       });
     }
   }
+  
 
   private normalizeCantonName(name: any): string | null {
     if (Array.isArray(name) && name.length > 0) {

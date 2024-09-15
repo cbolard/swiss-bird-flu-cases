@@ -18,7 +18,7 @@ export class MapboxService {
 
   async initializeMap(container: HTMLDivElement, mapEntity: MapEntity): Promise<void> {
     if (!supported()) {
-      container.innerHTML = "Votre navigateur ne supporte pas WebGL.";
+      container.innerHTML = "Your browser does not support WebGL.";
       return;
     }
   
@@ -31,7 +31,7 @@ export class MapboxService {
         const geoJsonData = await this.borderService.loadBorders('/data/swiss.geojson');
         
         if (!geoJsonData || !geoJsonData.features || geoJsonData.features.length === 0) {
-          throw new Error('Le GeoJSON des frontières n\'a pas pu être chargé.');
+          throw new Error('The GeoJSON for borders could not be loaded.');
         }
 
         this.borderService.addBordersSource(this.map!, 'canton-borders', geoJsonData);
@@ -44,22 +44,20 @@ export class MapboxService {
         const metricPerCanton = this.dataService.calculateAssociationsPerCanton(associations);
 
         if (!metricPerCanton || Object.keys(metricPerCanton).length === 0) {
-          throw new Error("Les métriques des cantons sont vides ou non valides.");
+          throw new Error("The canton metrics are empty or invalid.");
         }
 
         this.borderService.addBordersLayer(this.map!, 'canton-borders', metricPerCanton);
 
-        console.log('Métriques par canton :', metricPerCanton);
+        console.log('Metrics per canton:', metricPerCanton);
 
-        // Pass metricPerCanton to the interaction service
         this.mapInteractionService = new MapInteractionService(metricPerCanton);
 
-        // Add interaction service for hover and click actions
         this.mapInteractionService.addHoverInteraction(this.map!, "canton-borders-fill");
         this.mapInteractionService.addClickInteraction(this.map!, "canton-borders-fill");
 
       } catch (error) {
-        console.error('Erreur lors de l\'initialisation de la carte :', error);
+        console.error('Error initializing the map:', error);
       }
     });
   }

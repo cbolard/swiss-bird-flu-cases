@@ -1,13 +1,15 @@
-import { PopupService } from "./PopupService"; // Importer le service
+import { PopupService } from "./PopupService";
+import { FluCases } from "@/domain/entities/FluCasesEntity";
+
 
 export class MapInteractionService {
   private lastCantonName: string | null = null;
   private popupService: PopupService;
-  private metricPerCanton: Record<string, number>;
+  private metricPerCanton: Record<string, FluCases>;
 
-  constructor(metricPerCanton: Record<string, number>) {
+  constructor(metricPerCanton: Record<string, FluCases>) {
     this.popupService = new PopupService();
-    this.metricPerCanton = metricPerCanton; // Total des cas par canton
+    this.metricPerCanton = metricPerCanton;
   }
 
   addHoverInteraction(map: mapboxgl.Map, layerId: string): void {
@@ -17,17 +19,34 @@ export class MapInteractionService {
         const currentCantonName = properties?.kan_name?.replace(/[\[\]"]/g, "");
 
         if (currentCantonName && currentCantonName !== this.lastCantonName) {
-          // Récupérer le total des cas pour le canton
-          const totalCases = this.metricPerCanton[currentCantonName] || 0;
+          const cantonFluCases = this.metricPerCanton[currentCantonName];
 
-          const content = `
-            <div style="text-align: center;">
-              <h3 style="margin: 0; font-size: 22px; color: black; font-weight:600;">${currentCantonName}</h3>
-              <p style="margin: 5px 0; font-size: 14px; color: black;">Total cases: ${totalCases}</p>
-            </div>`;
+          if (cantonFluCases) {
+            const { H5N1, H5N2, H7N2, H7N8 } = cantonFluCases;
+            const totalCases = H5N1 + H5N2 + H7N2 + H7N8;
 
-          // Créer le popup avec le nom du canton et le nombre total de cas
-          this.popupService.createPopup(map, e.lngLat, content);
+            const content = `
+              <div style="text-align: center; margin-bottom:12px">
+                <h3 style="margin: 0; font-size: 22px; color: black; font-weight:600;">${currentCantonName}</h3>
+                 </div>
+                <p style="margin: 5px 0; font-size: 14px; color: black; font-weight:600">Flu cases: ${totalCases}</p>
+                <p style="margin: 5px 0; font-size: 14px; color: black;">H5N1 cases: ${H5N1}</p>
+                <p style="margin: 5px 0; font-size: 14px; color: black;">H5N2 cases: ${H5N2}</p>
+                <p style="margin: 5px 0; font-size: 14px; color: black;">H7N2 cases: ${H7N2}</p>
+                <p style="margin: 5px 0; font-size: 14px; color: black;">H7N8 cases: ${H7N8}</p>
+             `;
+
+            this.popupService.createPopup(map, e.lngLat, content);
+          } else {
+            const content = `
+              <div style="text-align: center;">
+                <h3 style="margin: 0; font-size: 22px; color: black; font-weight:600;">${currentCantonName}</h3>
+                <p style="margin: 5px 0; font-size: 14px; color: black;">No flu cases available</p>
+              </div>`;
+
+            this.popupService.createPopup(map, e.lngLat, content);
+          }
+
           this.lastCantonName = currentCantonName;
         }
 
@@ -59,3 +78,4 @@ export class MapInteractionService {
     });
   }
 }
+

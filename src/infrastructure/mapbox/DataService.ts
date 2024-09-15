@@ -12,8 +12,8 @@ export class DataService {
   private csvData: CsvRow[] = [];
   public cantonGeoJson: GeoJSON.FeatureCollection<GeoJSON.Geometry> | null =
     null;
+    loadGeoJsonData: any;
 
-  // Initializes data from CSV and GeoJSON files
   async initializeData(csvUrl: string, geoJsonUrl: string): Promise<void> {
     try {
       await this.loadGeoJsonData(geoJsonUrl);
@@ -29,7 +29,6 @@ export class DataService {
     }
   }
 
-  // Loads CSV data and filters out invalid coordinates
   async loadCSVData(csvUrl: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       Papa.parse(csvUrl, {
@@ -46,36 +45,40 @@ export class DataService {
     });
   }
 
-  // Loads GeoJSON data from the provided URL
-  async loadGeoJsonData(geoJsonUrl: string): Promise<void> {
-    const response = await fetch(geoJsonUrl);
-    if (!response.ok) {
-      throw new Error(`Error loading GeoJSON data from ${geoJsonUrl}`);
-    }
-    this.cantonGeoJson = await response.json();
-  }
-
-  // Associates coordinates from CSV rows with corresponding cantons
   associateCoordinatesWithCantons(): {
     lat: string;
     lon: string;
     canton: string | null;
+    H5N1: number;
+    H5N2: number;
+    H7N2: number;
+    H7N8: number;
   }[] {
     if (!this.cantonGeoJson) {
       return [];
     }
-
-    return this.csvData.map((row) => this.getCantonForRow(row));
+  
+    return this.csvData.map((row) => {
+      const canton = this.getCantonForRow(row).canton;
+  
+      return {
+        lat: row.latitude,
+        lon: row.longitude,
+        canton: canton,
+        H5N1: parseFloat(row.H5N1) || 0,
+        H5N2: parseFloat(row.H5N2) || 0,
+        H7N2: parseFloat(row.H7N2) || 0,
+        H7N8: parseFloat(row.H7N8) || 0,
+      };
+    });
   }
-
-  // Filters out rows with invalid latitude and longitude values
+  
   private filterValidCoordinates(data: CsvRow[]): CsvRow[] {
     return data.filter((row) =>
       this.areCoordinatesValid(row.latitude, row.longitude)
     );
   }
 
-  // Checks if latitude and longitude are valid
   private areCoordinatesValid(lat: any, lon: any): boolean {
     return (
       lat !== undefined &&
@@ -87,7 +90,6 @@ export class DataService {
     );
   }
 
-  // Maps a CSV row to its corresponding canton based on latitude and longitude
   private getCantonForRow(row: CsvRow): {
     lat: string;
     lon: string;
@@ -101,7 +103,6 @@ export class DataService {
     return { lat: row.latitude, lon: row.longitude, canton };
   }
 
-  // Finds the canton for a specific geographical point
   private findCantonForPoint(point: Feature<Point>): string | null {
     if (!this.cantonGeoJson) {
       return null;
@@ -123,7 +124,6 @@ export class DataService {
     return null;
   }
 
-  // Checks if the GeoJSON feature is a Polygon or MultiPolygon
   private isFeatureAPolygon(feature: Feature): boolean {
     return (
       feature.geometry.type === "Polygon" ||
@@ -131,21 +131,23 @@ export class DataService {
     );
   }
 
-  // Calculates the number of associations per canton
   calculateAssociationsPerCanton(
-    associations: { lat: string; lon: string; canton: string | null }[]
-  ): Record<string, number> {
-    const metricPerCanton: Record<string, number> = {};
-
+    associations: { lat: string; lon: string; canton: string | null, H5N1: number, H5N2: number, H7N2: number, H7N8: number }[]
+  ): Record<string, { H5N1: number; H5N2: number; H7N2: number; H7N8: number }> {
+    const metricPerCanton: Record<string, { H5N1: number; H5N2: number; H7N2: number; H7N8: number }> = {};
+  
     associations.forEach((association) => {
       if (association.canton) {
         if (!metricPerCanton[association.canton]) {
-          metricPerCanton[association.canton] = 0;
+          metricPerCanton[association.canton] = { H5N1: 0, H5N2: 0, H7N2: 0, H7N8: 0 };
         }
-        metricPerCanton[association.canton]++;
+        metricPerCanton[association.canton].H5N1 += association.H5N1 || 0;
+        metricPerCanton[association.canton].H5N2 += association.H5N2 || 0;
+        metricPerCanton[association.canton].H7N2 += association.H7N2 || 0;
+        metricPerCanton[association.canton].H7N8 += association.H7N8 || 0;
       }
     });
-
+  
     return metricPerCanton;
   }
 }
