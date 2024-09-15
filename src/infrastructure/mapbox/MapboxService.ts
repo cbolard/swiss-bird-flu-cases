@@ -19,22 +19,40 @@ export class MapboxService {
       container.innerHTML = "Votre navigateur ne supporte pas WebGL.";
       return;
     }
-
+  
     container.innerHTML = '';
     this.ensureAccessToken();
     this.createMapInstance(container, mapEntity);
-
+  
     this.map?.on('load', async () => {
-      const geoJsonData = await this.borderService.loadBorders('/data/swiss.geojson');
-      this.borderService.addBordersSource(this.map!, 'canton-borders', geoJsonData);
-      this.borderService.addBordersLayer(this.map!, 'canton-borders');
+      try {
+        const geoJsonData = await this.borderService.loadBorders('/data/swiss.geojson');
 
-      await this.dataService.loadCSVData('/data/file.csv');
+        geoJsonData.features.forEach(feature => {
+          console.log('GeoJSON Feature Properties:', feature.properties?.kan_name);
+        });
+        
+        if (!geoJsonData || !geoJsonData.features || geoJsonData.features.length === 0) {
+          throw new Error('Le GeoJSON des frontières n\'a pas pu être chargé.');
+        }
 
-      const metricPerCanton = this.dataService.calculateMetricPerCanton();
-      console.log("Metric par canton :", metricPerCanton); // Diagnostique les données
+        this.borderService.addBordersSource(this.map!, 'canton-borders', geoJsonData);
 
-      this.applyCantonColors(metricPerCanton);
+        this.dataService.cantonGeoJson = geoJsonData;
+
+        await this.dataService.loadCSVData('/data/file.csv');
+
+        const associations = this.dataService.associateCoordinatesWithCantons();
+        const metricPerCanton = this.dataService.calculateAssociationsPerCanton(associations);
+
+        if (!metricPerCanton || Object.keys(metricPerCanton).length === 0) {
+          throw new Error("Les métriques des cantons sont vides ou non valides.");
+        }
+
+        this.borderService.addBordersLayer(this.map!, 'canton-borders', metricPerCanton);
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation de la carte :', error);
+      }
     });
   }
 
@@ -53,27 +71,5 @@ export class MapboxService {
       center: [mapEntity.longitude, mapEntity.latitude],
       zoom: mapEntity.zoom,
     });
-  }
-
-  private applyCantonColors(metricPerCanton: Record<string, number>): void {
-    this.map?.setPaintProperty('canton-borders-fill', 'fill-color', [
-      'match',
-      ['get', 'name'],
-      ...Object.keys(metricPerCanton).flatMap(canton => {
-        console.log("Canton traité :", canton, "Metric:", metricPerCanton[canton]);
-        return [canton, this.getColorForMetric(metricPerCanton[canton])];
-      }),
-      '#CCCCCC'
-    ]);
-  }
-
-  private getColorForMetric(metric: number): string {
-    if (metric > 1) {
-      return '#FF0000';
-    } else if (metric > 0.5) {
-      return '#FFA500';
-    } else {
-      return '#00FF00';
-    }
   }
 }

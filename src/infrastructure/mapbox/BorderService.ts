@@ -1,4 +1,4 @@
-import { MapInteractionService } from '@/infrastructure/mapbox/MapInteractionService';
+import { MapInteractionService } from "@/infrastructure/mapbox/MapInteractionService";
 
 export class BorderService {
   private mapInteractionService: MapInteractionService;
@@ -7,7 +7,9 @@ export class BorderService {
     this.mapInteractionService = new MapInteractionService();
   }
 
-  async loadBorders(geoJsonUrl: string): Promise<GeoJSON.FeatureCollection<GeoJSON.Geometry>> {
+  async loadBorders(
+    geoJsonUrl: string
+  ): Promise<GeoJSON.FeatureCollection<GeoJSON.Geometry>> {
     const response = await fetch(geoJsonUrl);
     if (!response.ok) {
       throw new Error(`Failed to load GeoJSON data from ${geoJsonUrl}`);
@@ -22,7 +24,7 @@ export class BorderService {
   ): void {
     if (!map.getSource(sourceId)) {
       map.addSource(sourceId, {
-        type: 'geojson',
+        type: "geojson",
         data: geoJsonData,
       });
     } else {
@@ -30,33 +32,83 @@ export class BorderService {
     }
   }
 
-  addBordersLayer(map: mapboxgl.Map, sourceId: string): void {
-    if (!map.getLayer('canton-borders-line')) {
+  addBordersLayer(
+    map: mapboxgl.Map,
+    sourceId: string,
+    metricPerCanton: Record<string, number>
+  ): void {
+    const paintValues = Object.keys(metricPerCanton).flatMap((canton) => {
+      const normalizedCanton = this.normalizeCantonName(canton);
+      return normalizedCanton
+        ? [normalizedCanton, this.getColorForMetric(metricPerCanton[canton])]
+        : [];
+    });
+
+    if (!map.getLayer("canton-borders-fill")) {
       map.addLayer({
-        id: 'canton-borders-fill',
-        type: 'fill',
+        id: "canton-borders-fill",
+        type: "fill",
         source: sourceId,
         paint: {
-          'fill-color': 'rgba(200, 100, 240, 0.4)',
-          'fill-outline-color': 'red',
+          "fill-color": [
+            "match",
+            ["downcase", ["at", 0, ["get", "kan_name"]]],
+            ...paintValues,
+            "rgba(204, 204, 204, 0.3)", // Default color
+          ],
         },
       });
 
       map.addLayer({
-        id: 'canton-borders-line',
-        type: 'line',
+        id: "canton-borders-line",
+        type: "line",
         source: sourceId,
         paint: {
-          'line-color': 'red',
-          'line-width': 1,
-          'line-opacity': 0.5,
+          "line-color": "white",
+          "line-width": 1,
+          "line-opacity": 0.5,
         },
       });
 
-      this.mapInteractionService.addHoverInteraction(map, 'canton-borders-fill');
-      this.mapInteractionService.addClickInteraction(map, 'canton-borders-fill');
+      this.mapInteractionService.addHoverInteraction(
+        map,
+        "canton-borders-fill"
+      );
+      this.mapInteractionService.addClickInteraction(
+        map,
+        "canton-borders-fill"
+      );
+    }
+  }
+
+  private normalizeCantonName(name: any): string | null {
+    if (Array.isArray(name) && name.length > 0) {
+      name = name[0];
+    }
+
+    if (typeof name === "string" && name.trim() !== "") {
+      return name
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z]/g, "");
     } else {
-      console.warn("La couche 'canton-borders-line' existe déjà.");
+      console.warn(`Invalid or missing canton name: ${name}`);
+      return null;
+    }
+  }
+
+  private getColorForMetric(metric: number): string {
+    if (metric > 500) {
+      return "rgba(139, 0, 0, 0.3)"; // Dark red with 30% opacity (values > 500)
+    } else if (metric > 200) {
+      return "rgba(255, 0, 0, 0.3)"; // Red with 30% opacity (values between 200 and 500)
+    } else if (metric > 100) {
+      return "rgba(255, 165, 0, 0.3)"; // Orange with 30% opacity (values between 100 and 200)
+    } else if (metric > 50) {
+      return "rgba(255, 255, 0, 0.3)"; // Yellow with 30% opacity (values between 50 and 100)
+    } else {
+      return "rgba(0, 255, 0, 0.3)"; // Green with 30% opacity (values <= 50)
     }
   }
 }
