@@ -1,36 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import MapComponent from '@/infrastructure/ui/components/MapComponent';
+import React, { useEffect, useRef } from 'react';
+import { InitializeMap } from '@/application/useCases/Map/InitializeMap'; 
 import { MapEntity } from '@/domain/entities/MapEntity';
-import { DisplayMap } from '@/application/useCases/Map/DisplayMap';
 
 const Dashboard: React.FC = () => {
-  const [mapData, setMapData] = useState<MapEntity | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  const mapEntity: MapEntity = {
+    longitude: 8.1833,
+    latitude: 46.8333,
+    zoom: 8,
+  };
 
   useEffect(() => {
-    const mapEntity: MapEntity = {
-      longitude: 8.1833, 
-      latitude: 46.8333,
-      zoom: 8,   
-      markers: [],
-    };
+    if (mapContainerRef.current) {
+      const initializeMap = new InitializeMap();
+      initializeMap.execute(mapContainerRef.current, mapEntity);
+    }
+  }, [mapEntity]);
 
-    const displayMap = new DisplayMap(mapEntity);
-
-    displayMap.loadMarkersFromCSV('../../../../data/file.csv', () => {
-      const loadedMapData = displayMap.getMapData();
-      setMapData(loadedMapData);
-    });
-  }, []);
-
-  return (
-    <div className="h-full">
-      {mapData && (mapData.markers?.length ?? 0) > 0 ? (
-        <MapComponent mapEntity={mapData} />
-      ) : (
-        <p>Loading map data...</p>
-      )}
-    </div>
-  );
+  return <div ref={mapContainerRef} className="map-container" style={{ height: '100vh' }} />;
 };
 
 export default Dashboard;
