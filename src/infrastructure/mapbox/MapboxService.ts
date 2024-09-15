@@ -2,12 +2,14 @@ import mapboxgl from "mapbox-gl";
 import { MapEntity } from "@/domain/entities/MapEntity";
 import { BorderService } from '@/infrastructure/mapbox/BorderService';
 import { DataService } from '@/infrastructure/mapbox/DataService';
+import { MapInteractionService } from '@/infrastructure/mapbox/MapInteractionService';
 import { supported } from "@mapbox/mapbox-gl-supported";
 
 export class MapboxService {
   private map: mapboxgl.Map | null = null;
   private borderService: BorderService;
   private dataService: DataService;
+  private mapInteractionService: MapInteractionService | null = null;
 
   constructor() {
     this.borderService = new BorderService();
@@ -27,10 +29,6 @@ export class MapboxService {
     this.map?.on('load', async () => {
       try {
         const geoJsonData = await this.borderService.loadBorders('/data/swiss.geojson');
-
-        geoJsonData.features.forEach(feature => {
-          console.log('GeoJSON Feature Properties:', feature.properties?.kan_name);
-        });
         
         if (!geoJsonData || !geoJsonData.features || geoJsonData.features.length === 0) {
           throw new Error('Le GeoJSON des frontières n\'a pas pu être chargé.');
@@ -50,6 +48,16 @@ export class MapboxService {
         }
 
         this.borderService.addBordersLayer(this.map!, 'canton-borders', metricPerCanton);
+
+        console.log('Métriques par canton :', metricPerCanton);
+
+        // Pass metricPerCanton to the interaction service
+        this.mapInteractionService = new MapInteractionService(metricPerCanton);
+
+        // Add interaction service for hover and click actions
+        this.mapInteractionService.addHoverInteraction(this.map!, "canton-borders-fill");
+        this.mapInteractionService.addClickInteraction(this.map!, "canton-borders-fill");
+
       } catch (error) {
         console.error('Erreur lors de l\'initialisation de la carte :', error);
       }
