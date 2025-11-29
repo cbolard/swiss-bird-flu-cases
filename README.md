@@ -1,126 +1,119 @@
-# React + TypeScript + Vite Project
+# 🇨🇭 Swiss Bird Flu Dashboard
 
-This project is a minimal setup using **React**, **TypeScript**, and **Vite**. It includes hot module replacement (HMR), linting using **ESLint**, and a basic project structure to get started quickly.
+> **"Clinical Precision"** — A high-fidelity epidemiological visualization tool designed with the principles of the **International Typographic Style**.
 
-## Prerequisites
+![Project Status](https://img.shields.io/badge/Status-Active-success?style=flat-square)
+![Tech Stack](https://img.shields.io/badge/Stack-React_|_TypeScript_|_Mapbox-blue?style=flat-square)
+![Design](https://img.shields.io/badge/Design-Swiss_Style-red?style=flat-square)
 
-Before you begin, make sure you have the following installed:
+![Dashboard Preview](public/preview.png)
 
-- [Node.js](https://nodejs.org/) (v14 or higher)
-- [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/)
+## 🎯 Project Overview
 
-## Getting Started
+This dashboard is not just a map; it's a **precision instrument** for visualizing the spread of Avian Influenza (H5N1) across Switzerland. Built to demonstrate **Clean Architecture** in a frontend context, it prioritizes performance, maintainability, and a "data-first" user experience.
 
-### 1. Installation
+The design philosophy follows the **Swiss Style**: strict grids, sans-serif typography (Inter), and a monochromatic palette where color is used strictly for data signaling.
 
-Clone the repository and install dependencies:
+---
 
-```bash
-git clone <repository-url>
-cd <repository-folder>
-npm install
+## 🛠 Tech Stack & Architecture
+
+This project is engineered to impress. It moves beyond simple "tutorial code" to implement robust software design patterns.
+
+### Core Stack
+
+* **Framework**: React 18 + Vite (Fast HMR & Build)
+* **Language**: TypeScript (Strict Mode)
+* **Styling**: Tailwind CSS + Shadcn/UI (Radix Primitives)
+* **Maps**: Mapbox GL JS (Light v11 Style) + Turf.js (Geospatial Analysis)
+
+### 🏗 Clean Architecture (The "Recruiter Special")
+
+We strictly separate concerns to ensure the app is testable and scalable.
+
+```
+src/
+├── domain/           # 🧠 Business Logic & Entities (Pure TS, no React)
+│   └── entities/     # e.g., MapEntity, CantonData
+├── application/      # ⚙️ Use Cases (Orchestration)
+│   └── useCases/     # e.g., InitializeMap, FetchEpidemiologyData
+├── infrastructure/   # 🔌 External Services & UI (The "Dirty" Details)
+│   ├── mapbox/       # Mapbox implementation details
+│   ├── api/          # Data fetching (CSV/GeoJSON)
+│   └── ui/           # React Components & Pages
+└── main.tsx          # Entry Point
 ```
 
-Alternatively, you can use `yarn`:
+**Why this matters:** The business logic (calculating infection rates per canton) is decoupled from the UI library. We could swap React for Vue or Mapbox for Leaflet without rewriting the core domain logic.
 
-```bash
-git clone <repository-url>
-cd <repository-folder>
-yarn
-```
+---
 
-### 2. Running the Development Server
+## ✨ Key Features
 
-Start the development server with hot module replacement (HMR):
+### 1. 🎨 "Clinical Precision" UI
 
-```bash
-npm run dev
-```
+* **Swiss Design System**: A custom Tailwind theme implementing the Swiss palette (`#F5F5F7` background, `#E63946` signal red).
+* **Typography**: Exclusively uses **Inter** with massive weight contrasts (Bold for data, Regular for context).
+* **Minimalism**: No decorative elements. The map is desaturated so the data "screams".
 
-or
+### 2. ⚡ Performance First
 
-```bash
-yarn dev
-```
+* **Parallel Data Loading**: GeoJSON borders and CSV infection data are fetched in parallel with the map initialization to eliminate "waterfall" delays.
+* **Optimized UX**: A custom "Shimmer" loading state keeps the user engaged during the initial data crunching.
+* **Vector Tiles**: Uses Mapbox vector tiles for 60fps rendering even with complex polygon layers.
 
-This will start a local development server at http://localhost:3000 (or the specified port in your Vite config).
+### 3. 📊 Interactive Visualization
 
-### 3. Building for Production
+* **Smart Sidebar**: A glass-morphism panel that acts as a permanent analytical column.
+* **Intelligent Numbers**: Key KPIs (Total Cases, Active Zones) displayed with typographic hierarchy.
+* **Time Propagation**: A scrubbable timeline to visualize the spread of the virus (Implementation in progress).
 
-To build the project for production, run:
+---
 
-```bash
-npm run build
-```
+## 🚀 Getting Started
 
-or
+### Prerequisites
 
-```bash
-yarn build
-```
+* Node.js v18+
+* npm or yarn
+* A Mapbox Access Token
 
-This will create an optimized build in the `dist` folder.
+### Installation
 
-### 4. Linting
+1. **Clone the repo**
 
-To run ESLint, use:
+    ```bash
+    git clone https://github.com/cbolard/geodata-dashboard.git
+    cd geodata-dashboard
+    ```
 
-```bash
-npm run lint
-```
+2. **Install dependencies**
 
-or
+    ```bash
+    npm install
+    ```
 
-```bash
-yarn lint
-```
+3. **Setup Environment**
+    Create a `.env` file in the root:
 
-This will run ESLint with the TypeScript parser and the recommended ruleset.
+    ```env
+    VITE_MAPBOX_TOKEN=your_mapbox_token_here
+    ```
 
-### 5. Design Architecture
+4. **Run Development Server**
 
-This project follows Clean Architecture principles to ensure maintainability and scalability. The code is structured into distinct layers:
+    ```bash
+    npm run dev
+    ```
 
-- **Domain Layer**: Contains core business logic, like managing map-related entities.
-- **Application Layer**: Orchestrates the flow of data between the UI and services, preparing it for presentation.
-- **Infrastructure Layer**: Handles external systems, such as loading bird flu data and interacting with Mapbox for map rendering.
-- **Presentation Layer**: Manages the UI with React, handling user interaction and displaying geospatial data on the map.
+---
 
-Clean Code practices are applied throughout, including:
+## 👨‍💻 Author's Note
 
-- **Separation of Concerns**: Each layer has a clear, single responsibility, improving maintainability and testability.
-- **Descriptive Naming**: Variables, functions, and classes are named for clarity.
-- **Error Handling**: Errors are properly caught and handled.
-- **Modularization**: Code is broken into small, reusable, and testable units.
+This project was built to showcase how **rigorous software engineering principles** (Clean Arch, DI) can be applied to modern frontend development without sacrificing **aesthetic excellence**.
 
-By adhering to these principles, the project ensures flexibility, scalability, and ease of future enhancements.
+It stands as a counter-argument to "spaghetti code" frontends, proving that a dashboard can be both beautiful and architecturally sound.
 
+---
 
-### 6. Potential Improvements
-
-Here are some suggestions to enhance this project further:
-
-1. Getting Information About Birds and Virus Types:
-
-- Enable detailed information retrieval about the bird species and the types of bird flu viruses affecting each canton when users interact with the map.
-
-2. Time Analysis and Propagation:
-
-- Visualize the propagation of bird flu cases over time with detailed time-series charts. This would allow the user to see how the virus spreads across different cantons.
-
-### 7. License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-````
-### Key Changes:
-- Replaced the original "Potential Improvements" section with the two specific improvements related to *bird flu information* and *time analysis*.
-- Left the other technical improvements for further enhancements, such as linting, testing, and API integration.
-
-This structure keeps the README clean while focusing on your specific project needs.
-
-```python
-# Output: README.md
-React + TypeScript + Vite Project
-
-````
+*License: MIT*
