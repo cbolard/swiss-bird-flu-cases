@@ -6,7 +6,7 @@
 ![Tech Stack](https://img.shields.io/badge/Stack-React_|_TypeScript_|_Mapbox-blue?style=flat-square)
 ![Design](https://img.shields.io/badge/Design-Swiss_Style-red?style=flat-square)
 
-![Dashboard Preview](public/preview.png)
+![Dashboard Preview](public/previewv2.png)
 
 ## 🎯 Project Overview
 
