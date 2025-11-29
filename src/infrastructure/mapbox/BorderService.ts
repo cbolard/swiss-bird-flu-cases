@@ -1,5 +1,5 @@
 export class BorderService {
-  constructor() {}
+  constructor() { }
 
   async loadBorders(
     geoJsonUrl: string
@@ -15,7 +15,7 @@ export class BorderService {
     map: mapboxgl.Map,
     sourceId: string,
     geoJsonData: GeoJSON.FeatureCollection<GeoJSON.Geometry>
-    
+
   ): void {
 
     geoJsonData.features.forEach(feature => {
@@ -43,12 +43,12 @@ export class BorderService {
         metricPerCanton[canton].H5N2 +
         metricPerCanton[canton].H7N2 +
         metricPerCanton[canton].H7N8;
-  
+
       return normalizedCanton
         ? [normalizedCanton, this.getColorForMetric(totalCases)]
         : [];
     });
-  
+
     if (!map.getLayer("canton-borders-fill")) {
       map.addLayer({
         id: "canton-borders-fill",
@@ -63,7 +63,7 @@ export class BorderService {
           ],
         },
       });
-  
+
       map.addLayer({
         id: "canton-borders-line",
         type: "line",
@@ -76,13 +76,13 @@ export class BorderService {
       });
     }
   }
-  
+
 
   private normalizeCantonName(name: any): string | null {
     if (Array.isArray(name) && name.length > 0) {
-      name = name[0]; 
+      name = name[0];
     }
-  
+
     if (typeof name === "string" && name.trim() !== "") {
       return name
         .toLowerCase()
@@ -91,7 +91,7 @@ export class BorderService {
       return null;
     }
   }
-  
+
 
   private getColorForMetric(metric: number): string {
     if (metric > 500) {
@@ -103,7 +103,7 @@ export class BorderService {
     } else if (metric > 50) {
       return "rgba(255, 255, 0, 0.3)";
     } else {
-      return "rgba(0, 255, 0, 0.3)"; 
+      return "rgba(0, 255, 0, 0.3)";
     }
   }
 }

@@ -8,7 +8,7 @@ export class InitializeMap {
     this.mapboxService = new MapboxService();
   }
 
-  execute(container: HTMLDivElement, mapEntity: MapEntity): void {
-    this.mapboxService.initializeMap(container, mapEntity);
+  async execute(container: HTMLDivElement, mapEntity: MapEntity): Promise<void> {
+    await this.mapboxService.initializeMap(container, mapEntity);
   }
 }

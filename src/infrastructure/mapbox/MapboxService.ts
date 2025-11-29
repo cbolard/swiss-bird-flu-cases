@@ -21,45 +21,57 @@ export class MapboxService {
       container.innerHTML = "Your browser does not support WebGL.";
       return;
     }
-  
+
     container.innerHTML = '';
     this.ensureAccessToken();
     this.createMapInstance(container, mapEntity);
-  
-    this.map?.on('load', async () => {
-      try {
-        const geoJsonData = await this.borderService.loadBorders('/data/swiss.geojson');
-        
-        if (!geoJsonData || !geoJsonData.features || geoJsonData.features.length === 0) {
-          throw new Error('The GeoJSON for borders could not be loaded.');
-        }
 
-        this.borderService.addBordersSource(this.map!, 'canton-borders', geoJsonData);
+    // Start fetching data immediately (Parallel)
+    const bordersPromise = this.borderService.loadBorders('/data/swiss.geojson');
+    const csvPromise = this.dataService.loadCSVData('/data/file.csv');
 
-        this.dataService.cantonGeoJson = geoJsonData;
-
-        await this.dataService.loadCSVData('/data/file.csv');
-
-        const associations = this.dataService.associateCoordinatesWithCantons();
-        const metricPerCanton = this.dataService.calculateAssociationsPerCanton(associations);
-
-        if (!metricPerCanton || Object.keys(metricPerCanton).length === 0) {
-          throw new Error("The canton metrics are empty or invalid.");
-        }
-
-        this.borderService.addBordersLayer(this.map!, 'canton-borders', metricPerCanton);
-
-        console.log('Metrics per canton:', metricPerCanton);
-
-        this.mapInteractionService = new MapInteractionService(metricPerCanton);
-
-        this.mapInteractionService.addHoverInteraction(this.map!, "canton-borders-fill");
-        this.mapInteractionService.addClickInteraction(this.map!, "canton-borders-fill");
-
-      } catch (error) {
-        console.error('Error initializing the map:', error);
+    // Create a promise for the map load event
+    const mapLoadPromise = new Promise<void>((resolve) => {
+      if (this.map && this.map.loaded()) {
+        resolve();
+      } else {
+        this.map?.on('load', () => resolve());
       }
     });
+
+    try {
+      // Wait for everything to be ready
+      const [geoJsonData] = await Promise.all([bordersPromise, csvPromise, mapLoadPromise]);
+
+      if (!geoJsonData || !geoJsonData.features || geoJsonData.features.length === 0) {
+        throw new Error('The GeoJSON for borders could not be loaded.');
+      }
+
+      this.borderService.addBordersSource(this.map!, 'canton-borders', geoJsonData);
+
+      this.dataService.cantonGeoJson = geoJsonData;
+
+      // CSV data is already loaded into dataService by loadCSVData
+
+      const associations = this.dataService.associateCoordinatesWithCantons();
+      const metricPerCanton = this.dataService.calculateAssociationsPerCanton(associations);
+
+      if (!metricPerCanton || Object.keys(metricPerCanton).length === 0) {
+        throw new Error("The canton metrics are empty or invalid.");
+      }
+
+      this.borderService.addBordersLayer(this.map!, 'canton-borders', metricPerCanton);
+
+      console.log('Metrics per canton:', metricPerCanton);
+
+      this.mapInteractionService = new MapInteractionService(metricPerCanton);
+
+      this.mapInteractionService.addHoverInteraction(this.map!, "canton-borders-fill");
+      this.mapInteractionService.addClickInteraction(this.map!, "canton-borders-fill");
+
+    } catch (error) {
+      console.error('Error initializing the map:', error);
+    }
   }
 
   private ensureAccessToken(): void {
@@ -73,7 +85,7 @@ export class MapboxService {
   private createMapInstance(container: HTMLDivElement, mapEntity: MapEntity): void {
     this.map = new mapboxgl.Map({
       container,
-      style: 'mapbox://styles/mapbox/dark-v10',
+      style: 'mapbox://styles/mapbox/light-v11',
       center: [mapEntity.longitude, mapEntity.latitude],
       zoom: mapEntity.zoom,
     });
